@@ -1,5 +1,5 @@
 // Headless Script testing
-// Reusable slimerjs/phantomjs script for running cljs.test tests
+// slimerjs script for running cljs.test tests
 
 var p = require('webpage').create();
 var fs = require('fs');
@@ -26,16 +26,8 @@ var html = "<html><head><meta charset=\"UTF-8\">"
 
 fs.write(pagePath, html, 'w');
 
-function isSlimer() {
-    return (typeof slimer !== 'undefined');
-}
-
 function exit(code) {
-    if (isSlimer()) {
-        slimer.exit(code);
-    } else {
-        phantom.exit(code);
-    }
+    slimer.exit(code);
 }
 
 // Prepare the page with triggers
@@ -56,7 +48,7 @@ p.onError = function(msg, trace) {
 p.open(fixFileProtocol(pagePath), function (status) {
     fs.remove(pagePath);
     if (status == "fail") {
-        console.log(noScriptMsg(isSlimer() ? "Slimer" : "Phantom"));
+        console.log(noScriptMsg("Slimer"));
         exit(1);
     } else {
 
@@ -77,20 +69,18 @@ p.open(fixFileProtocol(pagePath), function (status) {
             }
         };
 
-        // if slimer & async add a shim to avoid insecure operations
-        if (isSlimer()) {
-            p.evaluate(function () {
-                function isAsync() {
-                    return ((typeof goog !== 'undefined') &&
-                            (typeof goog.async !== 'undefined'));
-                }
-                if (isAsync()) {
-                    goog.async.nextTick.setImmediate_ = function(fnCall) {
-                        return window.setTimeout(fnCall, 0);
-                    };
-                }
-            });
-        }
+        // if async add a shim to avoid insecure operations
+        p.evaluate(function () {
+            function isAsync() {
+                return ((typeof goog !== 'undefined') &&
+                    (typeof goog.async !== 'undefined'));
+            }
+            if (isAsync()) {
+                goog.async.nextTick.setImmediate_ = function(fnCall) {
+                    return window.setTimeout(fnCall, 0);
+                };
+            }
+        });
 
         p.evaluate(function(hasDoo, noDooMsg, exitCodePrefix) {
             // Helper funciton to exit

@@ -124,13 +124,13 @@
 (defmethod js->command* :phantom
   [_ _ opts]
   [(command-table :phantom opts)
-   (runner-path! :phantom "headless.js" {:common? true})
+   (runner-path! :phantom "phantom.js" {:common? true})
    (runner-path! :phantom-shim "phantomjs-shims.js")])
 
 (defmethod js->command* :slimer
   [_ _ opts]
   [(command-table :slimer opts)
-   (runner-path! :slimer "headless.js" {:common? true})])
+   (runner-path! :slimer "slimer.js" {:common? true})])
 
 (defmethod js->command* :rhino
   [_ _ opts]

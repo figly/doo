@@ -1062,7 +1062,7 @@ function build(trace, full, fn) {
             t = trace[i];
             var fileName = t.file || t.sourceURL;
             fileName = fileName.replace("file://", "");
-            
+
             if(files[fileName].map) {
                 // QtWebKit throws JS errors without column numbers! This screws up the source map!
                 // If the output is one-statement per line, this seems to work, though.
@@ -1084,17 +1084,12 @@ function build(trace, full, fn) {
         }
         
         if(r > 0) {
-            i = 0;
-
-            console.log("Looking up srcs " + JSON.stringify(src));
-            
             for(f in src) {
                 if(src.hasOwnProperty(f)) {
                     _readSrc(f);
                 }
             }
-        } else {
-            fn(result);
+            _buildNames();
         }
     }
     
@@ -1120,59 +1115,27 @@ function build(trace, full, fn) {
                 }
             }
         }
-        
-        fn(result);
     }
     
     function _readSrc(f) {
-        i++;
-
-        console.log("grabbing file " + f);
-        
-        var data;
         try {
-            data = fs.read(f);
+            src[f].lines = fs.read(f).split("\n");
         } catch (err) {
             console.log("Couldn't read source file " + f);
         }
-
-        if(data) {
-            src[f].lines = data.split("\n");
-        }
-
-        i--;
-
-        if(i === 0) {
-            _buildNames();
-        }
-
-        console.log("done with " + f);
     }
     
     function _readMap(f) {
-        i++;
-
         if (fs.isFile(f + '.map')) {
             var data = fs.read(f + ".map");
             if(data) {
                 try {
-                    files[f].map = new sourceMap.SourceMapConsumer(data.toString());
+                    files[f].map = new sourceMap.SourceMapConsumer(data);
                 }
                 catch(e) {
                     console.log('Could not parse "' + f + '.map" -- ' + e);
                 }
             }
-
-            i--;
-
-            if(i === 0) {
-                _build();
-            }
-            if(i === 0) {
-                _build();
-            }
-        } else {
-            i--;
         }
     }
     
@@ -1183,10 +1146,7 @@ function build(trace, full, fn) {
     
     for(i = 0, c = trace.length; i < c; i++) {
         t = trace[i];
-        var fileName = t.file;
-        if (!fileName) {
-            fileName = t.sourceURL
-        }
+        var fileName = t.file || t.sourceURL;
         fileName = fileName.replace("file://", "")
         
         if(!files[fileName]) {
@@ -1194,18 +1154,14 @@ function build(trace, full, fn) {
         }
     }
     
-    i = 0;
-    
     for(f in files) {
         if(files.hasOwnProperty(f) &&
             f !== 'module.js' && f !== 'node.js' && f !== 'http.js' && f !== 'events.js') {
             _readMap(f);
         }
     }
-    
-    if(i === 0) {
-        fn(null);
-    }
+    _build();
+    fn(result);
 }
 
 function stringify(data, prefix, limit) {

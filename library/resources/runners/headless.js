@@ -45,8 +45,11 @@ p.onConsoleMessage = function(msg) {
     console.log(msg);
 };
 
-p.onError = function(msg) {
+p.onError = function(msg, trace) {
     console.error(msg);
+    trace.forEach(function(t) {
+        console.log(' -> ' + (t.file || t.sourceURL) + ': ' + t.line + (t.function ? ' (in function ' + t.function +')' : ''));
+    });
     exit(1);
 };
 
